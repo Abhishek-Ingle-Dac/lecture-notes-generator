@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+
+# System files
+.DS_Store
+
+# Generated outputs
+*.pdf
+*.log
+
+# IDE settings
+.vscode/
+.idea/
