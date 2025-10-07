@@ -1,0 +1,8 @@
+streamlit
+openai-whisper
+google-generativeai
+reportlab
+speechrecognition
+pydub
+PyPDF2
+soundfile
