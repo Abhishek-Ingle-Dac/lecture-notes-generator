@@ -2,7 +2,7 @@ import google.generativeai as genai
 from config.settings import GEMINI_API_KEY
 
 # Configure Gemini
-genai.configure(api_key="AIzaSyBzYBd1cUjmxaJ4NASN5xFJRPMAa_ID1hE")
+genai.configure(api_key="AIzaSyArJGb_6PUlZRKRgFl-r0ya9Yb1gYUu8no")
 model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 def chunk_text(text, max_words=800):
@@ -49,33 +49,49 @@ def summarize_text(text: str) -> str:
     return summaries[0] if summaries else "⚠ Could not generate summary."
 
 
-def generate_quiz(text: str, n=5) -> str:
+def generate_quiz(transcript: str, n: int = 10) -> str:
     """
-    Generate quiz questions and answers from lecture.
-    Handles long text by chunking.
+    Generate n multiple-choice quiz questions with correct answers
+    based on the provided transcript.
     """
-    quizzes = []
-
-    for chunk in chunk_text(text):
+    try:
         prompt = f"""
-        Generate {n} quiz questions and answers from the lecture transcript below.
-        Return plain text only.
-        Use simple hyphen (-) for each question and answer.
-        Do not use Markdown symbols (*, **, ###).
+You are an expert educator. Create {n} multiple-choice questions (MCQs) based on the lecture content below.  
+Each question should have **4 options (A–D)** and the correct answer should be clearly marked.  
+Keep the questions factual and based only on the given text.  
 
-        Format like this:
-        - Q: <question>
+Lecture transcript:
+\"\"\"{transcript}\"\"\"
 
-        - A: <answer>
+Format your response exactly like this:
+Q1. <Question text>
+A) Option 1
+B) Option 2
+C) Option 3
+D) Option 4
+Answer: <Correct option letter and text>
 
-        Transcript segment:
-        {chunk}
+Q2. <Question text>
+...
+
+Now generate the quiz:
         """
-        try:
-            response = model.generate_content(prompt)
-            quizzes.append(response.text.strip())
-        except Exception as e:
-            print("Error generating quiz for chunk:", e)
 
-    return "\n\n".join(quizzes) if quizzes else "⚠ Could not generate quiz."
+        result = model.generate_content(prompt)
+        return result.text.strip()
 
+    except Exception as e:
+        return f"⚠ Quiz generation failed: {str(e)}"
+def generate_final_output(transcript: str, n_questions: int = 10) -> str:
+    """
+    Generate complete lecture notes and quiz for PDF export.
+    """
+    notes = summarize_text(transcript)
+    quiz = generate_quiz(transcript, n=n_questions)
+
+    final_output = f"""{notes}
+
+Quiz
+{quiz}
+"""
+    return final_output.strip()

@@ -5,6 +5,7 @@ from modules.file_export import export_pdf
 import tempfile
 import os
 
+
 st.set_page_config(page_title="Lecture Voice-to-Notes", layout="wide")
 
 st.title("🎙️ Lecture Voice-to-Notes Generator")
@@ -42,7 +43,7 @@ if uploaded_file:
 
             # STEP 3: Generate Quiz
             with st.spinner("❓ Generating quiz questions..."):
-                quiz_text = generate_quiz(transcript, n=5)
+                quiz_text = generate_quiz(transcript, n=10)
                 st.subheader("Quiz")
                 if quiz_text.startswith("⚠"):
                     st.error(quiz_text)
