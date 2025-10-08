@@ -1,14 +1,15 @@
-
-
 import streamlit as st
 from modules.speech_to_text import transcribe_audio
 from modules.gemini_backend import summarize_text, generate_quiz
 from modules.file_export import export_pdf
 import tempfile
+import os
+
 st.set_page_config(page_title="Lecture Voice-to-Notes", layout="wide")
 
 st.title("🎙️ Lecture Voice-to-Notes Generator")
 st.write("Convert speech or recorded lectures into summarized notes.")
+
 uploaded_file = st.file_uploader("Upload your lecture recording", type=["mp3", "wav", "m4a"])
 
 if uploaded_file:
@@ -16,48 +17,51 @@ if uploaded_file:
 
     # STEP 1: Transcribe Audio
     with st.spinner("🔄 Transcribing audio..."):
-    # Save uploaded file temporarily
-     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-        tmp_file.write(uploaded_file.read())
-        temp_path = tmp_file.name
+        # ✅ Save uploaded file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            temp_path = tmp_file.name
 
-    transcript = transcribe_audio(temp_path)
-    # STEP 2: Generate Summary
-    with st.spinner("📝 Generating summary notes..."):
-        summary_text = summarize_text(transcript)
-        st.subheader("Summary Notes")
-        if summary_text.startswith("⚠"):
-            st.error(summary_text)
-            summary_list = []
+        # ✅ Verify file actually exists before transcription
+        if not os.path.exists(temp_path):
+            st.error("Temporary file not found — upload might have failed.")
         else:
-            # Convert summary into a list of bullet points
-            summary_list = [line.strip("•- ") for line in summary_text.split("\n") if line.strip()]
-            for point in summary_list:
-                st.markdown(f"- {point}")
+            transcript = transcribe_audio(temp_path)
 
-    # STEP 3: Generate Quiz
-    with st.spinner("❓ Generating quiz questions..."):
-        quiz_text = generate_quiz(transcript, n=5)
-        st.subheader("Quiz")
-        if quiz_text.startswith("⚠"):
-            st.error(quiz_text)
-            quiz_list = []
-        else:
-            # Convert quiz output into list
-            quiz_list = [q.strip() for q in quiz_text.split("\n") if q.strip()]
-            for q in quiz_list:
-                st.markdown(f"• {q}")
+            # STEP 2: Generate Summary
+            with st.spinner("📝 Generating summary notes..."):
+                summary_text = summarize_text(transcript)
+                st.subheader("Summary Notes")
+                if summary_text.startswith("⚠"):
+                    st.error(summary_text)
+                    summary_list = []
+                else:
+                    summary_list = [line.strip("•- ") for line in summary_text.split("\n") if line.strip()]
+                    for point in summary_list:
+                        st.markdown(f"- {point}")
 
-    # STEP 4: Export to PDF
-    if st.button("📄 Download as PDF"):
-        if summary_list or quiz_list:
-            filename = export_pdf(summary_list, quiz_list)
-            with open(filename, "rb") as pdf_file:
-                st.download_button(
-                    label="⬇ Download PDF",
-                    data=pdf_file,
-                    file_name=filename,
-                    mime="application/pdf"
-                )
-        else:
-            st.warning("⚠ No content to export yet.")
+            # STEP 3: Generate Quiz
+            with st.spinner("❓ Generating quiz questions..."):
+                quiz_text = generate_quiz(transcript, n=5)
+                st.subheader("Quiz")
+                if quiz_text.startswith("⚠"):
+                    st.error(quiz_text)
+                    quiz_list = []
+                else:
+                    quiz_list = [q.strip() for q in quiz_text.split("\n") if q.strip()]
+                    for q in quiz_list:
+                        st.markdown(f"• {q}")
+
+            # STEP 4: Export to PDF
+            if st.button("📄 Download as PDF"):
+                if summary_list or quiz_list:
+                    filename = export_pdf(summary_list, quiz_list)
+                    with open(filename, "rb") as pdf_file:
+                        st.download_button(
+                            label="⬇ Download PDF",
+                            data=pdf_file,
+                            file_name=filename,
+                            mime="application/pdf"
+                        )
+                else:
+                    st.warning("⚠ No content to export yet.")
