@@ -22,11 +22,7 @@ if uploaded_file:
             st.error(f"Error during transcription: {e}")
             transcript = ""
 
-    if transcript:
-        # Display Transcript
-        st.subheader("Transcript")
-        st.text_area("Transcript", transcript, height=200)
-
+   
         # STEP 2: Generate Summary
         with st.spinner("📝 Generating summary notes..."):
             summary_text = summarize_text(transcript)
