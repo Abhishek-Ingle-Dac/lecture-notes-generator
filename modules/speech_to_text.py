@@ -1,34 +1,38 @@
 # modules/speech_to_text.py
 import whisper
 import numpy as np
-from pydub import AudioSegment
+import soundfile as sf
 import io
+import librosa
 
 # Load Whisper model once
-model = whisper.load_model("base")  # or "small", "medium", "large" depending on your needs
+model = whisper.load_model("base")
 
 def transcribe_audio(file) -> str:
     """
-    Transcribe uploaded audio (mp3/m4a/wav) into text.
-    This function is ffmpeg-free and works in-memory.
-    
+    Transcribe uploaded audio (wav/flac/mp3 if ffmpeg available) without ffmpeg dependency.
     Args:
         file: BytesIO or file-like object uploaded by Streamlit
-    
     Returns:
         transcript text
     """
     try:
-        # Convert audio to WAV in-memory
-        audio = AudioSegment.from_file(io.BytesIO(file.read()))
-        audio = audio.set_channels(1).set_frame_rate(16000)  # Mono, 16kHz for Whisper
+        file.seek(0)
 
-        # Convert to NumPy array
-        samples = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
+        # Read audio into numpy array
+        data, sr = sf.read(io.BytesIO(file.read()))
+        if len(data.shape) > 1:
+            data = np.mean(data, axis=1)  # Convert to mono
 
-        # Transcribe with Whisper
-        result = model.transcribe(samples, fp16=False)
-        return result["text"]
-    
+        # Resample to 16kHz
+        audio_16k = librosa.resample(data, orig_sr=sr, target_sr=16000)
+
+        # Convert to float32 (Whisper requires this)
+        audio_16k = audio_16k.astype(np.float32)
+
+        # Transcribe
+        result = model.transcribe(audio_16k, fp16=False)
+        return result.get("text", "")
+
     except Exception as e:
         return f"⚠ Error during transcription: {e}"

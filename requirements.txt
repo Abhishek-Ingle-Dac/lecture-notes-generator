@@ -3,8 +3,7 @@ openai>=1.0.0
 google-generativeai>=0.3.0
 reportlab>=4.0.0
 PyPDF2>=3.0.0
-pydub>=0.25.1
+numpy
+soundfile
+librosa
 openai-whisper
-
-
-
