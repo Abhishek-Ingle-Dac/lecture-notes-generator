@@ -5,7 +5,6 @@ from modules.file_export import export_pdf
 import tempfile
 import os
 
-
 st.set_page_config(page_title="Lecture Voice-to-Notes", layout="wide")
 
 st.title("🎙️ Lecture Voice-to-Notes Generator")
@@ -14,28 +13,31 @@ st.write("Convert speech or recorded lectures into summarized notes.")
 uploaded_file = st.file_uploader("Upload your lecture recording", type=["mp3", "wav", "m4a"])
 
 if uploaded_file:
-    st.success(f"Uploaded file: {uploaded_file.name}")
+    # ✅ Save uploaded file temporarily
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.name)[1]) as tmp_file:
+        tmp_file.write(uploaded_file.read())
+        temp_path = tmp_file.name
 
-    # STEP 1: Transcribe Audio
-    with st.spinner("🔄 Transcribing audio..."):
-        # ✅ Save uploaded file temporarily
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-            tmp_file.write(uploaded_file.read())
-            temp_path = tmp_file.name
+    # ✅ Verify file exists
+    if not os.path.exists(temp_path):
+        st.error("Temporary file not found — upload might have failed.")
+    else:
+        # STEP 1: Transcribe Audio
+        with st.spinner("🔄 Transcribing audio..."):
+            try:
+                transcript = transcribe_audio(temp_path)
+            except Exception as e:
+                st.error(f"Error during transcription: {e}")
+                transcript = ""
 
-        # ✅ Verify file actually exists before transcription
-        if not os.path.exists(temp_path):
-            st.error("Temporary file not found — upload might have failed.")
-        else:
-            transcript = transcribe_audio(temp_path)
-
+        if transcript:
             # STEP 2: Generate Summary
             with st.spinner("📝 Generating summary notes..."):
                 summary_text = summarize_text(transcript)
                 st.subheader("Summary Notes")
+                summary_list = []
                 if summary_text.startswith("⚠"):
                     st.error(summary_text)
-                    summary_list = []
                 else:
                     summary_list = [line.strip("•- ") for line in summary_text.split("\n") if line.strip()]
                     for point in summary_list:
@@ -45,9 +47,9 @@ if uploaded_file:
             with st.spinner("❓ Generating quiz questions..."):
                 quiz_text = generate_quiz(transcript, n=10)
                 st.subheader("Quiz")
+                quiz_list = []
                 if quiz_text.startswith("⚠"):
                     st.error(quiz_text)
-                    quiz_list = []
                 else:
                     quiz_list = [q.strip() for q in quiz_text.split("\n") if q.strip()]
                     for q in quiz_list:
@@ -66,3 +68,9 @@ if uploaded_file:
                         )
                 else:
                     st.warning("⚠ No content to export yet.")
+
+    # ✅ Clean up temporary file
+    try:
+        os.remove(temp_path)
+    except Exception:
+        pass
