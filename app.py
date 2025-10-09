@@ -26,6 +26,9 @@ if uploaded_file:
         # STEP 2: Generate Summary
         with st.spinner("📝 Generating summary notes..."):
             summary_text = summarize_text(transcript)
+            summary_text = summary_text.replace("**", "")
+            summary_text = summary_text.replace("*", " ")
+
             st.subheader("Summary Notes")
             summary_list = []
             if summary_text.startswith("⚠"):
@@ -38,6 +41,9 @@ if uploaded_file:
         # STEP 3: Generate Quiz
         with st.spinner("❓ Generating quiz questions..."):
             quiz_text = generate_quiz(transcript, n=10)
+            quiz_text = quiz_text.replace("**", "")
+            quiz_text = quiz_text.replace("*", "")
+            quiz_text = quiz_text.replace("•", "")
             st.subheader("Quiz")
             quiz_list = []
             if quiz_text.startswith("⚠"):
@@ -45,7 +51,7 @@ if uploaded_file:
             else:
                 quiz_list = [q.strip() for q in quiz_text.split("\n") if q.strip()]
                 for q in quiz_list:
-                    st.markdown(f"• {q}")
+                     st.markdown(q)
 
         # STEP 4: Export to PDF
         if st.button("📄 Download as PDF"):

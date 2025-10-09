@@ -47,7 +47,16 @@ def summarize_text(text: str) -> str:
             print("Error combining summaries:", e)
 
     return summaries[0] if summaries else "⚠ Could not generate summary."
+# def generate_summary_and_pdf(transcript_text):
+#     summary_text = model.generate_content(f"Summarize this lecture: {transcript_text}").text
+    
+#     # ✅ Clean and format text here
+#     summary_text = summary_text.replace("**", "")
+#     summary_text = summary_text.replace("*", "•")
 
+    # then generate PDF
+    generate_pdf("lecture_notes.pdf", summary_text)
+    return "lecture_notes.pdf"
 
 def generate_quiz(transcript: str, n: int = 10) -> str:
     """
