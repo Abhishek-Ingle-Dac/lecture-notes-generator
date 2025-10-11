@@ -2,7 +2,7 @@ import google.generativeai as genai
 from config.settings import GEMINI_API_KEY
 
 # Configure Gemini
-genai.configure(api_key="AIzaSyArJGb_6PUlZRKRgFl-r0ya9Yb1gYUu8no")
+genai.configure(api_key="AIzaSyAIzZKCd82Efe1gqknrvpx3PW9jrFgzSiA")
 model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 def chunk_text(text, max_words=800):
